@@ -12,7 +12,7 @@ var (
 	log = golog.LoggerFor("shortcut")
 )
 
-type List interface {
+type list interface {
 	// Contains checks if the ip belongs to one of the subnet in the list.
 	Contains(ip net.IP) bool
 }
@@ -21,13 +21,13 @@ type radixList struct {
 	root *radix.Tree
 }
 
-// NewList creates a shortcut list from a list of CIDR subnets in "a.b.c.d/24"
+// newList creates a shortcut list from a list of CIDR subnets in "a.b.c.d/24"
 // form.
-func NewList(subnets []string) List {
+func newList(subnets []string) list {
 	return newRadixList(subnets)
 }
 
-func newRadixList(subnets []string) List {
+func newRadixList(subnets []string) list {
 	tree := radix.New()
 	for _, s := range subnets {
 		_, n, err := net.ParseCIDR(s)
