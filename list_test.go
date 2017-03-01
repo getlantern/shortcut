@@ -9,7 +9,7 @@ import (
 )
 
 func TestContains(t *testing.T) {
-	l := newList([]string{
+	l := newRadixList([]string{
 		"1.0.1.0/24",
 		"1.0.2.0/23",
 		"1.0.8.0/21",

@@ -10,23 +10,20 @@ import (
 	"net"
 )
 
-type Shortcut struct {
-	v4list list
-	v6list list
+type Shortcut interface {
+	// Allow checks if the address is allowed to use shortcut.
+	Allow(addr string) bool
+}
+
+type shortcut struct {
+	v4list *radixList
+	v6list *radixList
 }
 
 // NewFromReader is a helper to create shortcut from readers. The content
 // should be in CIDR format, one entry per line.
-func NewFromReader(v4 io.Reader, v6 io.Reader) *Shortcut {
+func NewFromReader(v4 io.Reader, v6 io.Reader) Shortcut {
 	return New(readLines(v4), readLines(v6))
-}
-
-// New creates a new shortcut from the subnets.
-func New(ipv4Subnets []string, ipv6Subnets []string) *Shortcut {
-	return &Shortcut{
-		v4list: newList(ipv4Subnets),
-		v6list: newList(ipv6Subnets),
-	}
 }
 
 func readLines(r io.Reader) []string {
@@ -41,8 +38,15 @@ func readLines(r io.Reader) []string {
 	return lines
 }
 
-// Allow checks if the address is allowed to use shortcut.
-func (s *Shortcut) Allow(addr string) (hit bool) {
+// New creates a new shortcut from the subnets.
+func New(ipv4Subnets []string, ipv6Subnets []string) Shortcut {
+	return &shortcut{
+		v4list: newRadixList(ipv4Subnets),
+		v6list: newRadixList(ipv6Subnets),
+	}
+}
+
+func (s *shortcut) Allow(addr string) (hit bool) {
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		host = addr
