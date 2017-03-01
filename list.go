@@ -52,7 +52,3 @@ func (l *radixList) Contains(ip net.IP) bool {
 	})
 	return found
 }
-
-type sortList struct {
-	sorted []*net.IPNet
-}

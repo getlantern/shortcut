@@ -6,7 +6,6 @@ package shortcut
 
 import (
 	"bufio"
-	"context"
 	"io"
 	"net"
 )
@@ -16,19 +15,13 @@ type Shortcut struct {
 	v6list list
 }
 
-type Dialer struct {
-	*Shortcut
-	proxiedDialer func(ctx context.Context, net, addr string) (net.Conn, error)
-	directDialer  func(ctx context.Context, net, addr string) (net.Conn, error)
-}
-
 // NewFromReader is a helper to create shortcut from readers. The content
-// should be in CIDR format, one per line.
+// should be in CIDR format, one entry per line.
 func NewFromReader(v4 io.Reader, v6 io.Reader) *Shortcut {
 	return New(readLines(v4), readLines(v6))
 }
 
-// New creates a new shortcut.
+// New creates a new shortcut from the subnets.
 func New(ipv4Subnets []string, ipv6Subnets []string) *Shortcut {
 	return &Shortcut{
 		v4list: newList(ipv4Subnets),
@@ -48,30 +41,8 @@ func readLines(r io.Reader) []string {
 	return lines
 }
 
-// Dialer creates a new Dialer which checks the subnet lists in the shortcut.
-func (s *Shortcut) Dialer(
-	proxiedDialer func(ctx context.Context, net, addr string) (net.Conn, error),
-	directDialer func(ctx context.Context, net, addr string) (net.Conn, error),
-) *Dialer {
-	return &Dialer{
-		Shortcut:      s,
-		proxiedDialer: proxiedDialer,
-		directDialer:  directDialer,
-	}
-}
-
-func (d *Dialer) Dial(network, address string) (net.Conn, error) {
-	return d.DialContext(context.Background(), network, address)
-}
-
-func (d *Dialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
-	if d.isDomestic(address) {
-		return d.directDialer(ctx, network, address)
-	}
-	return d.proxiedDialer(ctx, network, address)
-}
-
-func (d *Dialer) isDomestic(addr string) (hit bool) {
+// Allow checks if the address is allowed to use shortcut.
+func (s *Shortcut) Allow(addr string) (hit bool) {
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		host = addr
@@ -82,11 +53,11 @@ func (d *Dialer) isDomestic(addr string) (hit bool) {
 	}
 	for _, ip := range ips {
 		if ip.To4() != nil {
-			hit = d.v4list.Contains(ip)
+			hit = s.v4list.Contains(ip)
 			break
 		}
 		if ip.To16() != nil {
-			hit = d.v6list.Contains(ip)
+			hit = s.v6list.Contains(ip)
 			break
 		}
 	}
