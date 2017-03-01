@@ -1,7 +1,6 @@
 package shortcut
 
 import (
-	"bufio"
 	"net"
 	"os"
 	"testing"
@@ -32,23 +31,11 @@ func TestContains(t *testing.T) {
 }
 
 func BenchmarkFindWithRadix(b *testing.B) {
-	l := newRadixList(readSubnets())
+	f, _ := os.Open("test_list.txt")
+	l := newRadixList(readLines(f))
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		l.Contains(net.ParseIP("1.0.4.9"))
 	}
-}
-
-func readSubnets() []string {
-	f, _ := os.Open("test_list.txt")
-	r := bufio.NewReader(f)
-	subnets := []string{}
-	line := ""
-	var err error
-	for ; err != nil; line, err = r.ReadString('\n') {
-		subnets = append(subnets, line)
-	}
-
-	return subnets
 }

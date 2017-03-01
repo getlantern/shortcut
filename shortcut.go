@@ -5,7 +5,9 @@
 package shortcut
 
 import (
+	"bufio"
 	"context"
+	"io"
 	"net"
 )
 
@@ -20,12 +22,30 @@ type Dialer struct {
 	directDialer  func(ctx context.Context, net, addr string) (net.Conn, error)
 }
 
+// NewFromReader is a helper to create shortcut from readers. The content
+// should be in CIDR format, one per line.
+func NewFromReader(v4 io.Reader, v6 io.Reader) *Shortcut {
+	return New(readLines(v4), readLines(v6))
+}
+
 // New creates a new shortcut.
 func New(ipv4Subnets []string, ipv6Subnets []string) *Shortcut {
 	return &Shortcut{
 		v4list: newList(ipv4Subnets),
 		v6list: newList(ipv6Subnets),
 	}
+}
+
+func readLines(r io.Reader) []string {
+	lines := []string{}
+	line := ""
+	var err error
+	br := bufio.NewReader(r)
+	for ; err != nil; line, err = br.ReadString('\n') {
+		lines = append(lines, line)
+	}
+
+	return lines
 }
 
 // Dialer creates a new Dialer which checks the subnet lists in the shortcut.
