@@ -9,7 +9,7 @@ import (
 )
 
 func TestContains(t *testing.T) {
-	l := newRadixList([]string{
+	l, err := newIPList([]string{
 		"1.0.1.0/24",
 		"1.0.2.0/23",
 		"1.0.8.0/21",
@@ -22,6 +22,10 @@ func TestContains(t *testing.T) {
 		"1.1.10.0/23",
 		"2001:230:8000::/33",
 	})
+	if !assert.NoError(t, err) {
+		return
+	}
+
 	assert.True(t, l.Contains(net.ParseIP("1.0.1.9")))
 	assert.True(t, l.Contains(net.ParseIP("1.0.3.9")))
 	assert.False(t, l.Contains(net.ParseIP("1.0.4.9")))
@@ -30,9 +34,17 @@ func TestContains(t *testing.T) {
 	assert.False(t, l.Contains(net.ParseIP("2001:230:4001::")))
 }
 
-func BenchmarkFindWithRadix(b *testing.B) {
+func TestOverlap(t *testing.T) {
+	_, err := newIPList([]string{"1.0.1.0/24", "1.0.1.5/24"})
+	assert.Error(t, err)
+}
+
+func BenchmarkContains(b *testing.B) {
 	f, _ := os.Open("test_list.txt")
-	l := newRadixList(readLines(f))
+	l, err := newIPList(readLines(f))
+	if err != nil {
+		b.Fatal(err)
+	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
