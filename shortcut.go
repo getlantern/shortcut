@@ -28,11 +28,9 @@ func NewFromReader(v4 io.Reader, v6 io.Reader) Shortcut {
 
 func readLines(r io.Reader) []string {
 	lines := []string{}
-	line := ""
-	var err error
-	br := bufio.NewReader(r)
-	for ; err != nil; line, err = br.ReadString('\n') {
-		lines = append(lines, line)
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
 	}
 
 	return lines
@@ -40,6 +38,10 @@ func readLines(r io.Reader) []string {
 
 // New creates a new shortcut from the subnets.
 func New(ipv4Subnets []string, ipv6Subnets []string) Shortcut {
+	log.Debugf("Creating shortcut with %d ipv4 subnets and %d ipv6 subnets",
+		len(ipv4Subnets),
+		len(ipv6Subnets),
+	)
 	return &shortcut{
 		v4list: newRadixList(ipv4Subnets),
 		v6list: newRadixList(ipv6Subnets),
