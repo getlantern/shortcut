@@ -47,12 +47,10 @@ func BenchmarkFindWithSort(b *testing.B) {
 
 func readSubnets() []string {
 	f, _ := os.Open("test_list.txt")
-	r := bufio.NewReader(f)
+	r := bufio.NewScanner(f)
 	subnets := []string{}
-	line := ""
-	var err error
-	for ; err != nil; line, err = r.ReadString('\n') {
-		subnets = append(subnets, line)
+	for r.Scan() {
+		subnets = append(subnets, r.Text())
 	}
 
 	return subnets
