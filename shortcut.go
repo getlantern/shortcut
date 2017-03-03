@@ -16,8 +16,8 @@ type Shortcut interface {
 }
 
 type shortcut struct {
-	v4list *radixList
-	v6list *radixList
+	v4list *sortList
+	v6list *sortList
 }
 
 // NewFromReader is a helper to create shortcut from readers. The content
@@ -43,8 +43,8 @@ func New(ipv4Subnets []string, ipv6Subnets []string) Shortcut {
 		len(ipv6Subnets),
 	)
 	return &shortcut{
-		v4list: newRadixList(ipv4Subnets),
-		v6list: newRadixList(ipv6Subnets),
+		v4list: newSortList(ipv4Subnets),
+		v6list: newSortList(ipv6Subnets),
 	}
 }
 
@@ -58,11 +58,11 @@ func (s *shortcut) Allow(addr string) (hit bool) {
 		return
 	}
 	for _, ip := range ips {
-		if ip.To4() != nil {
+		if ip = ip.To4(); ip != nil {
 			hit = s.v4list.Contains(ip)
 			break
 		}
-		if ip.To16() != nil {
+		if ip = ip.To16(); ip != nil {
 			hit = s.v6list.Contains(ip)
 			break
 		}
