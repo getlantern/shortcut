@@ -11,8 +11,9 @@ import (
 )
 
 type Shortcut interface {
-	// Allow checks if the address is allowed to use shortcut.
-	Allow(addr string) bool
+	// Allow checks if the address is allowed to use shortcut and returns true
+	// together with the resolved IP address if so.
+	Allow(addr string) (bool, net.IP)
 }
 
 type shortcut struct {
@@ -48,24 +49,22 @@ func New(ipv4Subnets []string, ipv6Subnets []string) Shortcut {
 	}
 }
 
-func (s *shortcut) Allow(addr string) (hit bool) {
+func (s *shortcut) Allow(addr string) (bool, net.IP) {
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		host = addr
 	}
 	ips, err := net.LookupIP(host)
 	if err != nil {
-		return
+		return false, nil
 	}
 	for _, ip := range ips {
 		if ip = ip.To4(); ip != nil {
-			hit = s.v4list.Contains(ip)
-			break
+			return s.v4list.Contains(ip), ip
 		}
 		if ip = ip.To16(); ip != nil {
-			hit = s.v6list.Contains(ip)
-			break
+			return s.v6list.Contains(ip), ip
 		}
 	}
-	return
+	return false, nil
 }
