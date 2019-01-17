@@ -6,6 +6,7 @@ package shortcut
 
 import (
 	"bufio"
+	"context"
 	"io"
 	"net"
 )
@@ -13,12 +14,13 @@ import (
 type Shortcut interface {
 	// Allow checks if the address is allowed to use shortcut and returns true
 	// together with the resolved IP address if so.
-	Allow(addr string) (bool, net.IP)
+	Allow(ctx context.Context, addr string) (bool, net.IP)
 }
 
 type shortcut struct {
-	v4list *sortList
-	v6list *sortList
+	v4list   *sortList
+	v6list   *sortList
+	resolver *net.Resolver
 }
 
 // NewFromReader is a helper to create shortcut from readers. The content
@@ -46,20 +48,23 @@ func New(ipv4Subnets []string, ipv6Subnets []string) Shortcut {
 	return &shortcut{
 		v4list: newSortList(ipv4Subnets),
 		v6list: newSortList(ipv6Subnets),
+		// Prefers the system resolver by default, hopefully can use OS DNS cache.
+		resolver: net.DefaultResolver,
 	}
 }
 
-func (s *shortcut) Allow(addr string) (bool, net.IP) {
+func (s *shortcut) Allow(ctx context.Context, addr string) (bool, net.IP) {
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		host = addr
 	}
-	ips, err := net.LookupIP(host)
+	addrs, err := s.resolver.LookupIPAddr(ctx, host)
 	if err != nil {
 		return false, nil
 	}
-	for _, ip := range ips {
-		if ip = ip.To4(); ip != nil {
+	for _, addr := range addrs {
+		ip := addr.IP.To4()
+		if ip != nil {
 			return s.v4list.Contains(ip), ip
 		}
 		if ip = ip.To16(); ip != nil {
