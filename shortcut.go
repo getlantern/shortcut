@@ -15,6 +15,7 @@ type Shortcut interface {
 	// Allow checks if the address is allowed to use shortcut and returns true
 	// together with the resolved IP address if so.
 	Allow(ctx context.Context, addr string) (bool, net.IP)
+	// SetResolver sets a custom resolver to replace the system default.
 	SetResolver(r func(ctx context.Context, addr string) (net.IP, error))
 }
 
@@ -47,9 +48,8 @@ func New(ipv4Subnets []string, ipv6Subnets []string) Shortcut {
 		len(ipv6Subnets),
 	)
 	return &shortcut{
-		v4list: newSortList(ipv4Subnets),
-		v6list: newSortList(ipv6Subnets),
-		// Prefers the system resolver by default, hopefully can use OS DNS cache.
+		v4list:   newSortList(ipv4Subnets),
+		v6list:   newSortList(ipv6Subnets),
 		resolver: defaultResolver,
 	}
 }
