@@ -37,12 +37,10 @@ func TestContext(t *testing.T) {
 		strings.NewReader("127.0.0.0/24\n8.8.0.0/16\n"),
 		strings.NewReader("fe80::1/64\n::/64\n2001:4860:4860::8800/120\n"),
 	)
-	s.(*shortcut).resolver.PreferGo = true // to use the supplied Dial() function
-	s.(*shortcut).resolver.Dial = func(ctx context.Context, network, address string) (net.Conn, error) {
+	s.SetResolver(func(ctx context.Context, addr string) (net.IP, error) {
 		time.Sleep(100 * time.Millisecond)
-		var d net.Dialer
-		return d.DialContext(ctx, network, address)
-	}
+		return defaultResolver(ctx, addr)
+	})
 	ctx := context.Background()
 	hit, _ := s.Allow(ctx, "google-public-dns-a.google.com:8888")
 	assert.True(t, hit, "host should be allowed when IP is in the list")
