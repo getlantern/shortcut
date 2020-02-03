@@ -30,14 +30,14 @@ func (s sorter) Less(i, j int) bool {
 	}
 }
 
-type sortList struct {
+type SortList struct {
 	sorted sorter
 }
 
-// newSortList creates a shortcut list from a list of CIDR subnets in
+// NewSortList creates a shortcut list from a list of CIDR subnets in
 // "a.b.c.d/24" or "2001:db8::/32" format. Each subnet string in one list
 // should be in the same format, i.e., IPv4 only or IPv6 only, but not mixed.
-func newSortList(subnets []string) *sortList {
+func NewSortList(subnets []string) *SortList {
 	nets := make([]*net.IPNet, 0, len(subnets))
 	for _, s := range subnets {
 		_, n, err := net.ParseCIDR(s)
@@ -49,14 +49,14 @@ func newSortList(subnets []string) *sortList {
 		nets = append(nets, n)
 	}
 	sort.Sort(sorter(nets))
-	return &sortList{nets}
+	return &SortList{nets}
 }
 
 // Contains checks if the ip belongs to one of the subnets in the list.
 // Note that the byte length of ip should match the format of the subnets,
 // i.e., call To4() before checking against an IPv4 list, and To16() for an
 // IPv6 list.
-func (l *sortList) Contains(ip net.IP) bool {
+func (l *SortList) Contains(ip net.IP) bool {
 	index := sort.Search(len(l.sorted), func(i int) bool {
 		res := bytes.Compare(ip, l.sorted[i].IP)
 		return res < 0

@@ -20,8 +20,8 @@ type Shortcut interface {
 }
 
 type shortcut struct {
-	v4list   *sortList
-	v6list   *sortList
+	v4list   *SortList
+	v6list   *SortList
 	resolver func(ctx context.Context, addr string) (net.IP, error)
 }
 
@@ -48,8 +48,8 @@ func New(ipv4Subnets []string, ipv6Subnets []string) Shortcut {
 		len(ipv6Subnets),
 	)
 	return &shortcut{
-		v4list:   newSortList(ipv4Subnets),
-		v6list:   newSortList(ipv6Subnets),
+		v4list:   NewSortList(ipv4Subnets),
+		v6list:   NewSortList(ipv6Subnets),
 		resolver: defaultResolver,
 	}
 }
