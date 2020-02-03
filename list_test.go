@@ -9,7 +9,7 @@ import (
 )
 
 func TestContains(t *testing.T) {
-	l := newSortList([]string{
+	l := NewSortList([]string{
 		"1.1.0.0/24",
 		"1.1.2.0/23",
 		"1.1.4.0/22",
@@ -37,7 +37,7 @@ func TestContains(t *testing.T) {
 	// larger than the largest network
 	assert.False(t, l.Contains(net.ParseIP("1.1.16.1").To4()))
 
-	l = newSortList([]string{
+	l = NewSortList([]string{
 		"fe80::1/64",
 		"::/64",
 		"2001:230:9000::/33",
@@ -49,7 +49,7 @@ func TestContains(t *testing.T) {
 
 func BenchmarkFindWithSort(b *testing.B) {
 	f, _ := os.Open("test_list.txt")
-	l := newSortList(readLines(f))
+	l := NewSortList(readLines(f))
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
