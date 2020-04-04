@@ -29,6 +29,7 @@ func TestAllow(t *testing.T) {
 	assert.True(t, allow("google-public-dns-a.google.com"))
 	assert.True(t, allow("google-public-dns-b.google.com"))
 	assert.False(t, allow("1.2.4.5:8888"))
+	assert.False(t, allow("1.2.4.5"))
 	assert.False(t, allow("not-exist.com"))
 }
 
