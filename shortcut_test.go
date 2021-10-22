@@ -30,9 +30,9 @@ func TestAllow(t *testing.T) {
 	assert.Equal(t, allow("localhost"), Direct)
 	assert.Equal(t, allow("google-public-dns-a.google.com"), Direct)
 	assert.Equal(t, allow("google-public-dns-b.google.com"), Direct)
-	assert.Equal(t, allow("1.2.4.5:8888"), Proxy)
-	assert.Equal(t, allow("1.2.4.5"), Proxy)
-	assert.Equal(t, allow("not-exist.com"), Proxy)
+	assert.Equal(t, allow("1.2.4.5:8888"), Unknown)
+	assert.Equal(t, allow("1.2.4.5"), Unknown)
+	assert.Equal(t, allow("not-exist.com"), Unknown)
 
 	// Test DNS poisoned IP for Iran
 	assert.Equal(t, allow("10.10.1.1"), Proxy)
@@ -54,7 +54,7 @@ func TestContext(t *testing.T) {
 	assert.Equal(t, hit, Direct, "host should be allowed when IP is in the list")
 	ctx, _ = context.WithTimeout(ctx, 10*time.Millisecond)
 	hit, _ = s.RouteMethod(ctx, "google-public-dns-a.google.com:8888")
-	assert.Equal(t, hit, Proxy, "host should be disallowed if context exceeded performing DNS lookup")
+	assert.Equal(t, hit, Unknown, "host should be disallowed if context exceeded performing DNS lookup")
 }
 
 func TestSystemResolverTiming(t *testing.T) {
