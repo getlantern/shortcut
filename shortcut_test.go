@@ -17,37 +17,44 @@ func TestAllow(t *testing.T) {
 	s := NewFromReader(
 		strings.NewReader("127.0.0.0/24\n8.8.0.0/16\n"),
 		strings.NewReader("fe80::1/64\n::/64\n2001:4860:4860::8800/120\n"),
+		strings.NewReader("10.10.0.0/16\n"),
+		strings.NewReader(""),
 	)
 
-	allow := func(addr string) bool {
-		hit, _ := s.Allow(context.Background(), addr)
+	allow := func(addr string) Method {
+		hit, _ := s.RouteMethod(context.Background(), addr)
 		return hit
 	}
-	assert.True(t, allow("127.0.0.1:8888"))
-	assert.True(t, allow("localhost:8888"))
-	assert.True(t, allow("localhost"))
-	assert.True(t, allow("google-public-dns-a.google.com"))
-	assert.True(t, allow("google-public-dns-b.google.com"))
-	assert.False(t, allow("1.2.4.5:8888"))
-	assert.False(t, allow("1.2.4.5"))
-	assert.False(t, allow("not-exist.com"))
+	assert.Equal(t, allow("127.0.0.1:8888"), Direct)
+	assert.Equal(t, allow("localhost:8888"), Direct)
+	assert.Equal(t, allow("localhost"), Direct)
+	assert.Equal(t, allow("google-public-dns-a.google.com"), Direct)
+	assert.Equal(t, allow("google-public-dns-b.google.com"), Direct)
+	assert.Equal(t, allow("1.2.4.5:8888"), Proxy)
+	assert.Equal(t, allow("1.2.4.5"), Proxy)
+	assert.Equal(t, allow("not-exist.com"), Proxy)
+
+	// Test DNS poisoned IP for Iran
+	assert.Equal(t, allow("10.10.1.1"), Proxy)
 }
 
 func TestContext(t *testing.T) {
 	s := NewFromReader(
 		strings.NewReader("127.0.0.0/24\n8.8.0.0/16\n"),
 		strings.NewReader("fe80::1/64\n::/64\n2001:4860:4860::8800/120\n"),
+		strings.NewReader("10.10.0.0/16\n"),
+		strings.NewReader(""),
 	)
 	s.SetResolver(func(ctx context.Context, addr string) (net.IP, error) {
 		time.Sleep(100 * time.Millisecond)
 		return defaultResolver(ctx, addr)
 	})
 	ctx := context.Background()
-	hit, _ := s.Allow(ctx, "google-public-dns-a.google.com:8888")
-	assert.True(t, hit, "host should be allowed when IP is in the list")
+	hit, _ := s.RouteMethod(ctx, "google-public-dns-a.google.com:8888")
+	assert.Equal(t, hit, Direct, "host should be allowed when IP is in the list")
 	ctx, _ = context.WithTimeout(ctx, 10*time.Millisecond)
-	hit, _ = s.Allow(ctx, "google-public-dns-a.google.com:8888")
-	assert.False(t, hit, "host should be disallowed if context exceeded performing DNS lookup")
+	hit, _ = s.RouteMethod(ctx, "google-public-dns-a.google.com:8888")
+	assert.Equal(t, hit, Proxy, "host should be disallowed if context exceeded performing DNS lookup")
 }
 
 func TestSystemResolverTiming(t *testing.T) {
