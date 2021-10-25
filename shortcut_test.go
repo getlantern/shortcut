@@ -15,7 +15,7 @@ import (
 
 func TestAllow(t *testing.T) {
 	s := NewFromReader(
-		strings.NewReader("127.0.0.0/24\n8.8.0.0/16\n"),
+		strings.NewReader("127.0.0.0/24\n8.8.0.0/16\n10.11.0.0/16\n"),
 		strings.NewReader("fe80::1/64\n::/64\n2001:4860:4860::8800/120\n"),
 		strings.NewReader("10.10.0.0/16\n"),
 		strings.NewReader(""),
@@ -36,6 +36,8 @@ func TestAllow(t *testing.T) {
 
 	// Test DNS poisoned IP for Iran
 	assert.Equal(t, allow("10.10.1.1"), Proxy)
+
+	assert.Equal(t, allow("10.11.1.1"), Direct)
 }
 
 func TestContext(t *testing.T) {
