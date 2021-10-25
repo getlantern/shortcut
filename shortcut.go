@@ -104,10 +104,10 @@ func (s *shortcut) RouteMethod(ctx context.Context, addr string) (Method, net.IP
 		return Unknown, nil
 	}
 	if ip4 := ip.To4(); ip4 != nil {
-		return s.check(s.v4DirectList, s.v4ProxyList, ip)
+		return s.check(s.v4DirectList, s.v4ProxyList, ip4)
 	}
 	if ip6 := ip.To16(); ip6 != nil {
-		return s.check(s.v6DirectList, s.v6ProxyList, ip)
+		return s.check(s.v6DirectList, s.v6ProxyList, ip6)
 	}
 	return Unknown, ip
 }

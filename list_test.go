@@ -21,6 +21,7 @@ func TestContains(t *testing.T) {
 		"1.0.2.0/23",
 		"1.0.8.0/21",
 		"1.0.32.0/19",
+		"10.0.0.0/8",
 	})
 	// smaller than the smallest network
 	assert.False(t, l.Contains(net.ParseIP("1.0.0.254").To4()))
@@ -36,6 +37,7 @@ func TestContains(t *testing.T) {
 	assert.True(t, l.Contains(net.ParseIP("1.1.11.254").To4()))
 	// larger than the largest network
 	assert.False(t, l.Contains(net.ParseIP("1.1.16.1").To4()))
+	assert.True(t, l.Contains(net.ParseIP("10.10.1.1").To4()))
 
 	l = NewSortList([]string{
 		"fe80::1/64",
