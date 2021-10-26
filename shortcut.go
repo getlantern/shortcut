@@ -15,13 +15,13 @@ import (
 type Method int
 
 const (
-	// Indicates traffic to this domain/IP should be proxied.
+	// Proxy indicates traffic to this domain/IP should be proxied.
 	Proxy Method = iota
 
-	// Indicates traffic to this domain/IP should be routed directly.
+	// Direct indicates traffic to this domain/IP should be routed directly.
 	Direct
 
-	// Indicates shortcut has no opinion about the routing for this domain/IP.
+	// Unknown indicates shortcut has no opinion about the routing for this domain/IP.
 	Unknown
 )
 
